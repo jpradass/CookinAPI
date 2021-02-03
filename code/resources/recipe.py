@@ -14,7 +14,7 @@ class Recipe(Resource):
         "instructions", type=str, required=True, help="Every recipe needs its instructions", location='json'
     )
     parser.add_argument(
-        "ingredients", type=list, required=True, help="Every recipe has a way to be done", location='json'
+        "ingredients", type=list, required=False, help="Every recipe has a way to be done", location='json'
     )
 
     @jwt_required
@@ -34,6 +34,33 @@ class Recipe(Resource):
 
         recipe.saveto_db()
         return {'recipe': recipe.json()}, 201
+
+    @jwt_required
+    def put(self, uuid):
+        recipe = RecipeModel.findby_id(uuid)
+        if not recipe:
+            return {'message': 'Recipe not found', 'description': uuid}, 404
+
+        data = Recipe.parser.parse_args()
+        if data['name'] is not None:
+            recipe.name = data['name']
+        if data['calories'] is not None:
+            recipe.calories = data['calories']
+        if data['instructions'] is not None:
+            recipe.instructions = data['instructions']
+
+        recipe.saveto_db()
+        return recipe.json() 
+
+    @jwt_required
+    def delete(self, uuid):
+        recipe = RecipeModel.findby_id(uuid)
+
+        if recipe:
+            recipe.deletefrom_db()
+            return {'message': 'Recipe deleted', 'description': uuid}
+
+        return {'message': 'Recipe not found', 'description': uuid}, 404
 
 class RecipeList(Resource):
     @jwt_required
