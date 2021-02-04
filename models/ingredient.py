@@ -10,7 +10,7 @@ class IngredientModel(db.Model):
 
     id = db.Column(db.String(40), primary_key=True)
     name = db.Column(db.String(80))
-    quantity = db.Column(db.Integer)
+    quantity = db.Column(db.String(30))
     
     recipe_id = db.Column(db.String(40), db.ForeignKey('recipes.id'), nullable=False)
     recipe = db.relationship("RecipeModel")
