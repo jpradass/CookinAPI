@@ -9,15 +9,14 @@ from resources.ingredient import Ingredient
 from resources.user import UserList, UserLogin, UserLogout, TokenRefresh
 
 app = Flask(__name__)
-# app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///data.db" # For development purposes, when deployed it is recommended postgresql or some another
-app.config["SQLALCHEMY_DATABASE_URI"] = f"mongodb+srv://josue:{os.getenv('DB_PWD')}@cookinapi-cluster.vz4uo.mongodb.net/{os.getenv('DB_NAME')}?retryWrites=true&w=majority" 
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get('DATABASE_URL', 'sqlite:///data.db')
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["PROPAGATE_EXCEPTIONS"] = True
 app.config["JWT_BLACKLIST_ENABLED"] = True
 app.config["JWT_BLACKLIST_TOKEN_CHECKS"] = ["access", "refresh"]
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = ACCESS_EXPIRES
 app.config['JWT_REFRESH_TOKEN_EXPIRES'] = REFRESH_EXPIRES
-app.secret_key = os.getenv('SECRET_KEY')
+app.secret_key = os.environ.get('SECRET_KEY', 'F874866D-60DD-4EF9-B6C2-1A049E9D7E97')
 api = Api(app)
 
 jwt = JWTManager(app)
