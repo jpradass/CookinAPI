@@ -20,10 +20,6 @@ app.config['JWT_REFRESH_TOKEN_EXPIRES'] = REFRESH_EXPIRES
 app.secret_key = os.getenv('SECRET_KEY')
 api = Api(app)
 
-@app.before_first_request
-def create_tables():
-    db.create_all()
-
 jwt = JWTManager(app)
 
 @jwt.token_in_blacklist_loader
