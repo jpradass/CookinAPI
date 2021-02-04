@@ -1,6 +1,7 @@
 from typing import Dict, List
 import uuid
 from db import db
+from werkzeug.security import check_password_hash
 
 userJSON = Dict[str, str]
 
@@ -18,6 +19,9 @@ class UserModel(db.Model):
     
     def json(self) -> userJSON:
         return {'id': self.id, 'username': self.username}
+
+    def check_pwd(self, pwd) -> bool:
+        return check_password_hash(self.password, pwd)
 
     def saveto_db(self) -> None:
         db.session.add(self)

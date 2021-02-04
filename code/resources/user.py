@@ -8,7 +8,6 @@ from flask_jwt_extended import (
     jwt_refresh_token_required,
     get_jti
 )
-from werkzeug.security import safe_str_cmp
 from models.user import UserModel
 from redis_access import revoked_store, ACCESS_EXPIRES, REFRESH_EXPIRES
 
@@ -39,7 +38,7 @@ class UserLogin(Resource):
         data = _user_parser.parse_args()
 
         user = UserModel.findby_username(data['username'])
-        if user and safe_str_cmp(user.password, data['password']):
+        if user and user.check_pwd(data['password']):
             access_token = create_access_token(identity=user.id, fresh=True)
             refresh_token = create_refresh_token(user.id)
 
