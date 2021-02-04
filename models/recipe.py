@@ -19,8 +19,9 @@ class RecipeModel(db.Model):
         self.name = name
         self.calories = calories
         self.instructions = instructions
-        for ingredient in ingredients:
-            IngredientModel(ingredient['name'], ingredient['quantity'], self.id).saveto_db()
+        self.ingredients = ingredients
+        # for ingredient in ingredients:
+        #     IngredientModel(ingredient['name'], ingredient['quantity'], self.id).saveto_db()
 
     def json(self) -> RecipeJSON:
         return {"id": self.id, "name": self.name, "calories": self.calories, "instructions": self.instructions, "ingredients": [ingredient.json() for ingredient in self.ingredients]}
