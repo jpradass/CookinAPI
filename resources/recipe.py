@@ -2,6 +2,20 @@ from flask_jwt_extended import jwt_required
 from flask_restful import Resource, reqparse
 from models.recipe import RecipeModel
 
+opt_parser = reqparse.RequestParser()
+opt_parser.add_argument(
+    "name", type=str, required=False, help="This field cannot be left blank", location=['args', 'json']
+)
+opt_parser.add_argument(
+    "calories", type=float, required=False, help="Every recipe has its calories", location=['args', 'json']
+)
+opt_parser.add_argument(
+    "instructions", type=str, required=False, help="Every recipe needs its instructions", location=['args', 'json']
+)
+opt_parser.add_argument(
+    "ingredients", type=list, required=False, help="Every recipe has a way to be done", location=['args', 'json']
+)
+
 class Recipe(Resource):
     @jwt_required
     def get(self, uuid):
@@ -37,31 +51,16 @@ class Recipe(Resource):
 
     @jwt_required
     def put(self, uuid):
-        parser = reqparse.RequestParser()
-        parser.add_argument(
-            "name", type=str, required=False, help="This field cannot be left blank", location='json'
-        )
-        parser.add_argument(
-            "calories", type=float, required=False, help="Every recipe has its calories", location='json'
-        )
-        parser.add_argument(
-            "instructions", type=str, required=False, help="Every recipe needs its instructions", location='json'
-        )
-        parser.add_argument(
-            "ingredients", type=list, required=False, help="Every recipe has a way to be done", location='json'
-        )
-
+        
         recipe = RecipeModel.findby_id(uuid)
         if not recipe:
             return {'message': 'Recipe not found', 'description': uuid}, 404
 
-        data = parser.parse_args()
-        if data['name'] is not None:
-            recipe.name = data['name']
-        if data['calories'] is not None:
-            recipe.calories = data['calories']
-        if data['instructions'] is not None:
-            recipe.instructions = data['instructions']
+        data = opt_parser.parse_args()
+
+        if data['name']: recipe.name = data['name']
+        if data['calories']: recipe.calories = data['calories']
+        if data['instructions']: recipe.instructions = data['instructions']
 
         recipe.saveto_db()
         return recipe.json() 
@@ -85,13 +84,20 @@ class RecipeList(Resource):
 class RecipeSearch(Resource):
     @jwt_required
     def get(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument(
-            "q", type=str, required=True, help="This field cannot be left blank", location='args'
-        ) 
+        search_obj = {'key_search': None, 'value_search': None}
+        data = opt_parser.parse_args()
 
-        data = parser.parse_args()
-        recipes = RecipeModel.findmoreby_name(data['q'])
+        if data['name']: 
+            search_obj['key_search'] = 'name'
+            search_obj['value_search'] = data['name']
+        elif data['calories']: 
+            search_obj['key_search'] = 'calories'
+            search_obj['value_search'] = data['calories']
+        elif data['instructions']: 
+            search_obj['key_search'] = 'instructions'
+            search_obj['value_search'] = data['instructions']
+
+        recipes = RecipeModel.find_by(search_obj)
         if recipes:
             return {'items': len(recipes),'recipes': [recipe.json() for recipe in recipes]}
-        return {'message': 'Search did not found a recipe', 'description': data['q']}
+        return {'message': 'Search did not found a recipe', 'description': search_obj}
