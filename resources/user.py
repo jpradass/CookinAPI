@@ -27,6 +27,21 @@ class User(Resource):
             return user.json()
         return {'message': 'User not found', 'description': username}, 404
 
+class UserSearch(Resource):
+    @jwt_required
+    def get(self):
+        users = None
+        parser = reqparse.RequestParser()
+        parser.add_argument("username", type=str, required=True, help="This field cannot be left blank", location="args")
+
+        data = parser.parse_args()
+        if data['username']: users = UserModel.searchby_username(data['username'])
+
+        if users:
+            return {'items': len(users), 'users': [user.json() for user in users]}
+        return {'message': 'Search did not find any user', 'description': {'search_key': 'username', 'search_value': data['username']}}, 404
+
+
 class UserList(Resource):
     @jwt_required
     def get(self):

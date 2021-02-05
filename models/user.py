@@ -40,5 +40,9 @@ class UserModel(db.Model):
         return cls.query.filter_by(username=username).first()
 
     @classmethod
+    def searchby_username(cls, username) -> List["UserModel"]:
+        return cls.query.filter(cls.username.like(f"%{username}%")).all()
+
+    @classmethod
     def find_all(cls) -> List["UserModel"]:
         return cls.query.all()

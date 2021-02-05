@@ -34,25 +34,25 @@ class RecipeModel(db.Model):
         db.session.commit()
 
     @classmethod
-    def find_by(cls, search_obj: Dict[str, str]) -> List["RecipeModel"]:
+    def search_by(cls, search_obj: Dict[str, str]) -> List["RecipeModel"]:
         if search_obj['key_search'] == 'name':
-            return cls.findby_name(search_obj['value_search'])
+            return cls.searchby_name(search_obj['value_search'])
         elif search_obj['key_search'] == 'calories':
-            return cls.findby_calories(search_obj['value_search'])
+            return cls.searchby_calories(search_obj['value_search'])
         elif search_obj['key_search'] == 'instructions':
-            return cls.findby_instructions(search_obj['value_search'])
+            return cls.searchby_instructions(search_obj['value_search'])
         else: return None
 
     @classmethod
-    def findby_name(cls, name: str) -> List["RecipeModel"]:
+    def searchby_name(cls, name: str) -> List["RecipeModel"]:
         return cls.query.filter(cls.name.like(f"%{name}%")).all()
 
     @classmethod
-    def findby_calories(cls, calories: float) -> List["RecipeModel"]:
+    def searchby_calories(cls, calories: float) -> List["RecipeModel"]:
         return cls.query.filter(cls.calories.like(f"%{calories}%")).all()
 
     @classmethod
-    def findby_instructions(cls, instructions: str) -> List["RecipeModel"]:
+    def searchby_instructions(cls, instructions: str) -> List["RecipeModel"]:
         return cls.query.filter(cls.instructions.like(f"%{instructions}%")).all()
 
     @classmethod
@@ -60,5 +60,5 @@ class RecipeModel(db.Model):
         return cls.query.filter_by(id=_id).first()
 
     @classmethod
-    def find_all(cls) -> List["RecipeModel"]:
+    def search_all(cls) -> List["RecipeModel"]:
         return cls.query.all()

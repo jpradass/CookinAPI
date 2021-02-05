@@ -6,7 +6,7 @@ from redis_access import revoked_store, ACCESS_EXPIRES, REFRESH_EXPIRES
 
 from resources.recipe import Recipe, RecipeList, RecipeSearch
 from resources.ingredient import Ingredient
-from resources.user import UserList, UserLogin, UserLogout, TokenRefresh
+from resources.user import UserList, UserLogin, UserLogout, TokenRefresh, UserSearch
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get('DATABASE_URL', 'sqlite:///data.db')
@@ -37,6 +37,7 @@ api.add_resource(UserLogin, '/auth/login')
 api.add_resource(UserLogout, '/auth/logout')
 api.add_resource(TokenRefresh, "/auth/refresh")
 api.add_resource(UserList, '/user')
+api.add_resource(UserSearch, '/user/search')
 
 if __name__ == "__main__":
     from db import db

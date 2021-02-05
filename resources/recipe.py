@@ -78,7 +78,7 @@ class Recipe(Resource):
 class RecipeList(Resource):
     @jwt_required
     def get(self):
-        recipes = RecipeModel.find_all()
+        recipes = RecipeModel.search_all()
         return {'items': len(recipes), 'recipes': [recipe.json() for recipe in recipes]}
 
 class RecipeSearch(Resource):
@@ -97,7 +97,7 @@ class RecipeSearch(Resource):
             search_obj['key_search'] = 'instructions'
             search_obj['value_search'] = data['instructions']
 
-        recipes = RecipeModel.find_by(search_obj)
+        recipes = RecipeModel.search_by(search_obj)
         if recipes:
             return {'items': len(recipes),'recipes': [recipe.json() for recipe in recipes]}
-        return {'message': 'Search did not found a recipe', 'description': search_obj}
+        return {'message': 'Search did not found a recipe', 'description': search_obj}, 404
