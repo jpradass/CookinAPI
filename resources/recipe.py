@@ -82,7 +82,6 @@ class RecipeList(Resource):
         return {'items': len(recipes), 'recipes': [recipe.json() for recipe in recipes]}
 
 class RecipeSearch(Resource):
-    @jwt_required
     def get(self):
         search_obj = {'key_search': None, 'value_search': None}
         data = opt_parser.parse_args()
