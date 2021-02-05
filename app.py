@@ -4,7 +4,7 @@ from flask_jwt_extended import JWTManager
 import os
 from redis_access import revoked_store, ACCESS_EXPIRES, REFRESH_EXPIRES
 
-from resources.recipe import Recipe, RecipeList
+from resources.recipe import Recipe, RecipeList, RecipeSearch
 from resources.ingredient import Ingredient
 from resources.user import UserList, UserLogin, UserLogout, TokenRefresh
 
@@ -31,6 +31,7 @@ def checktoken_revoked(decrypted_token):
 
 api.add_resource(Recipe, '/recipe/<string:uuid>')
 api.add_resource(RecipeList, '/recipe')
+api.add_resource(RecipeSearch, '/recipe/search')
 api.add_resource(Ingredient, '/ingredient/<string:uuid>')
 api.add_resource(UserLogin, '/auth/login')
 api.add_resource(UserLogout, '/auth/logout')

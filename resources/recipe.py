@@ -79,4 +79,19 @@ class Recipe(Resource):
 class RecipeList(Resource):
     @jwt_required
     def get(self):
-        return {'recipes': [recipe.json() for recipe in RecipeModel.find_all()]}
+        recipes = RecipeModel.find_all()
+        return {'items': len(recipes), 'recipes': [recipe.json() for recipe in recipes]}
+
+class RecipeSearch(Resource):
+    @jwt_required
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument(
+            "q", type=str, required=True, help="This field cannot be left blank", location='args'
+        ) 
+
+        data = parser.parse_args()
+        recipes = RecipeModel.findmoreby_name(data['q'])
+        if recipes:
+            return {'items': len(recipes),'recipes': [recipe.json() for recipe in recipes]}
+        return {'message': 'Search did not found a recipe', 'description': data['q']}

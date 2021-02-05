@@ -30,7 +30,8 @@ class User(Resource):
 class UserList(Resource):
     @jwt_required
     def get(self):
-        return {'users': [user.json() for user in UserModel.find_all()]}
+        users = UserModel.find_all()
+        return {'items': len(users), 'users': [user.json() for user in users]}
 
 class UserLogin(Resource):
     @classmethod

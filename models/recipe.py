@@ -34,8 +34,12 @@ class RecipeModel(db.Model):
         db.session.commit()
 
     @classmethod
-    def findby_name(cls, name) -> "RecipeModel":
+    def findoneby_name(cls, name) -> "RecipeModel":
         return cls.query.filter_by(name=name).first()
+
+    @classmethod
+    def findmoreby_name(cls, name) -> List["RecipeModel"]:
+        return cls.query.filter(cls.name.like(f"%{name}%")).all()
 
     @classmethod
     def findby_id(cls, _id) -> "RecipeModel":
