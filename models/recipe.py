@@ -45,15 +45,15 @@ class RecipeModel(db.Model):
 
     @classmethod
     def searchby_name(cls, name: str) -> List["RecipeModel"]:
-        return cls.query.filter(cls.name.like(f"%{name}%")).all()
+        return cls.query.filter(cls.name.ilike(f"%{name}%")).all()
 
     @classmethod
     def searchby_calories(cls, calories: float) -> List["RecipeModel"]:
-        return cls.query.filter(cls.calories.like(f"%{calories}%")).all()
+        return cls.query.filter(cls.calories.ilike(f"%{calories}%")).all()
 
     @classmethod
     def searchby_instructions(cls, instructions: str) -> List["RecipeModel"]:
-        return cls.query.filter(cls.instructions.like(f"%{instructions}%")).all()
+        return cls.query.filter(cls.instructions.ilike(f"%{instructions}%")).all()
 
     @classmethod
     def findby_id(cls, _id: str) -> "RecipeModel":
