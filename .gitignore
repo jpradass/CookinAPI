@@ -131,3 +131,6 @@ dmypy.json
 # sqlite development db
 *.db
 .vscode
+
+Pipfile
+Pipfile.lock
