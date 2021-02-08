@@ -1,18 +1,16 @@
-from typing import Dict, List, Union
+from typing import List
 import uuid
 
 from db import db
-
-IngredientJSON = Dict[str, Union[str, int]]
 
 class IngredientModel(db.Model):
     __tablename__ = "ingredients"
 
     id = db.Column(db.String(40), primary_key=True)
-    name = db.Column(db.String(80))
-    quantity = db.Column(db.String(30))
+    name = db.Column(db.String(80), nullable=False)
+    quantity = db.Column(db.String(30), nullable=False)
     
-    recipe_id = db.Column(db.String(40), db.ForeignKey('recipes.id'), nullable=False)
+    recipe_id = db.Column(db.String(40), db.ForeignKey('recipes.id'))
     recipe = db.relationship("RecipeModel")
 
     def __init__(self, name: str, quantity: int, recipe_id: str) -> None:
@@ -20,9 +18,6 @@ class IngredientModel(db.Model):
         self.name = name
         self.quantity = quantity
         self.recipe_id = recipe_id
-
-    def json(self) -> IngredientJSON:
-        return {"name": self.name, "quantity": self.quantity}
 
     def saveto_db(self) -> None:
         db.session.add(self)

@@ -1,102 +1,81 @@
 from flask_jwt_extended import jwt_required
-from flask_restful import Resource, reqparse
+from flask import request
+from flask_restful import Resource
 from models.recipe import RecipeModel
+from schemas.recipe import RecipeSchema
 
-opt_parser = reqparse.RequestParser()
-opt_parser.add_argument(
-    "name", type=str, required=False, help="This field cannot be left blank", location=['args', 'json']
-)
-opt_parser.add_argument(
-    "calories", type=float, required=False, help="Every recipe has its calories", location=['args', 'json']
-)
-opt_parser.add_argument(
-    "instructions", type=str, required=False, help="Every recipe needs its instructions", location=['args', 'json']
-)
-opt_parser.add_argument(
-    "ingredients", type=list, required=False, help="Every recipe has a way to be done", location=['args', 'json']
-)
+recipe_schema = RecipeSchema()
+recipe_list_schema = RecipeSchema(many=True)
 
 class Recipe(Resource):
     @jwt_required
-    def get(self, uuid):
+    def get(self):
+        uuid = request.args.get("uuid")
+        if not uuid:
+            return {'message': "Missing uuid parameter", 'description': {'search_key': 'uuid', 'search_value': uuid}}, 404
+
         recipe = RecipeModel.findby_id(uuid)
         if recipe:
-            return recipe.json()
+            return recipe_schema.dump(recipe), 200
         return {'message': "Recipe not found", 'description': uuid}, 404
 
     @jwt_required
-    def post(self, uuid):
-        parser = reqparse.RequestParser()
-        parser.add_argument(
-            "name", type=str, required=True, help="This field cannot be left blank", location='json'
-        )
-        parser.add_argument(
-            "calories", type=float, required=True, help="Every recipe has its calories", location='json'
-        )
-        parser.add_argument(
-            "instructions", type=str, required=True, help="Every recipe needs its instructions", location='json'
-        )
-        parser.add_argument(
-            "ingredients", type=list, required=True, help="Every recipe has a way to be done", location='json'
-        )
-
-        if RecipeModel.findby_id(uuid):
-            return {'message': "Recipe with this uuid already exists", 'description': uuid}, 400
-        
-        data = parser.parse_args()
-        recipe = RecipeModel(uuid, **data)
+    def post(self):        
+        recipe = RecipeModel(**request.get_json())
+        if RecipeModel.findby_name(recipe.name):
+            return {'message': "Recipe with this name '{}' already exists".format(recipe.name)}, 400
 
         recipe.saveto_db()
-        return {'recipe': recipe.json()}, 201
+        return {'recipe': recipe_schema.dump(recipe)}, 201
 
     @jwt_required
-    def put(self, uuid):
-        
-        recipe = RecipeModel.findby_id(uuid)
+    def put(self):
+        recipe_data = recipe_schema.load(request.get_json())
+
+        recipe = RecipeModel.findby_name(recipe_data.name)
         if not recipe:
-            return {'message': 'Recipe not found', 'description': uuid}, 404
+            return {'message': "Recipe not found", 'description': recipe_data.name}, 404
 
-        data = opt_parser.parse_args()
-
-        if data['name']: recipe.name = data['name']
-        if data['calories']: recipe.calories = data['calories']
-        if data['instructions']: recipe.instructions = data['instructions']
+        if recipe_data.name: recipe.name = recipe_data.name
+        if recipe_data.calories: recipe.calories = recipe_data.calories        
+        if recipe_data.instructions: recipe.instructions = recipe_data.instructions
 
         recipe.saveto_db()
-        return recipe.json() 
+        return {'recipe': recipe_schema.dump(recipe)}, 200
 
     @jwt_required
-    def delete(self, uuid):
+    def delete(self):
+        uuid = request.args.get('uuid')
+        if not uuid:
+            return {'message': "Missing uuid parameter", 'description': {'search_key': 'uuid', 'search_value': uuid}}, 404
+        
         recipe = RecipeModel.findby_id(uuid)
-
         if recipe:
             recipe.deletefrom_db()
             return {'message': 'Recipe deleted', 'description': uuid}
-
         return {'message': 'Recipe not found', 'description': uuid}, 404
 
 class RecipeList(Resource):
     @jwt_required
     def get(self):
         recipes = RecipeModel.search_all()
-        return {'items': len(recipes), 'recipes': [recipe.json() for recipe in recipes]}
+        return {'items': len(recipes), 'recipes': recipe_list_schema.dump(recipes)}
 
 class RecipeSearch(Resource):
     def get(self):
         search_obj = {'key_search': None, 'value_search': None}
-        data = opt_parser.parse_args()
-
-        if data['name']: 
+        name, calories, instructions = request.args.get('name'), request.args.get('calories'), request.args.get('instructions')
+        if name:
             search_obj['key_search'] = 'name'
-            search_obj['value_search'] = data['name']
-        elif data['calories']: 
+            search_obj['value_search'] = name
+        elif calories: 
             search_obj['key_search'] = 'calories'
-            search_obj['value_search'] = data['calories']
-        elif data['instructions']: 
+            search_obj['value_search'] = calories
+        elif instructions: 
             search_obj['key_search'] = 'instructions'
-            search_obj['value_search'] = data['instructions']
+            search_obj['value_search'] = instructions
 
         recipes = RecipeModel.search_by(search_obj)
         if recipes:
-            return {'items': len(recipes),'recipes': [recipe.json() for recipe in recipes]}
+            return {'items': len(recipes),'recipes': recipe_list_schema.dump(recipes)}
         return {'message': 'Search did not found a recipe', 'description': search_obj}, 404

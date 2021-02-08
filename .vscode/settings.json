@@ -7,5 +7,6 @@
             "database": "${workspaceFolder:CookinAPI}/code/data.db",
             "group": "data"
         }
-    ]
+    ],
+    "python.pythonPath": "/Users/jpradass/.local/share/virtualenvs/CookinAPI-cNzwWMYD/bin/python3"
 }

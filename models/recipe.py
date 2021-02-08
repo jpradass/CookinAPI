@@ -1,29 +1,26 @@
-from typing import Dict, List, Union
+from typing import Dict, List
 from models.ingredient import IngredientModel
 from db import db
-
-RecipeJSON = Dict[str, Union[str, float, List]]
+import uuid
 
 class RecipeModel(db.Model):
     __tablename__ = "recipes"
 
     id = db.Column(db.String(40), primary_key=True)
-    name = db.Column(db.String(80), unique=True)
+    name = db.Column(db.String(80), nullable=False, unique=True)
     calories = db.Column(db.Float(precision=2))
     instructions = db.Column(db.String)
 
-    ingredients = db.relationship("IngredientModel")
+    ingredients = db.relationship("IngredientModel", cascade="all,delete")
 
-    def __init__(self, uuid: str, name: str, calories: float, instructions: str, ingredients: List) -> None:
-        self.id = uuid
+    def __init__(self, name: str, *args, **kwargs) -> None:
+        self.id = uuid.uuid4().__str__()
         self.name = name
-        self.calories = calories
-        self.instructions = instructions
+        self.calories = kwargs.get('calories', None)
+        self.instructions = kwargs.get('instructions', None)
+        ingredients = kwargs.get('ingredients', list())
         for ingredient in ingredients:
             self.ingredients.append(IngredientModel(ingredient['name'], ingredient['quantity'], self.id))
-
-    def json(self) -> RecipeJSON:
-        return {"id": self.id, "name": self.name, "calories": self.calories, "instructions": self.instructions, "ingredients": [ingredient.json() for ingredient in self.ingredients]}
 
     def saveto_db(self) -> None:
         db.session.add(self)
@@ -58,6 +55,10 @@ class RecipeModel(db.Model):
     @classmethod
     def findby_id(cls, _id: str) -> "RecipeModel":
         return cls.query.filter_by(id=_id).first()
+
+    @classmethod
+    def findby_name(cls, name: str) -> "RecipeModel":
+        return cls.query.filter_by(name=name).first()
 
     @classmethod
     def search_all(cls) -> List["RecipeModel"]:

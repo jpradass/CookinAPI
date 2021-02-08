@@ -8,53 +8,49 @@ from flask_jwt_extended import (
     jwt_refresh_token_required,
     get_jti
 )
+from flask import request
 from models.user import UserModel
+from schemas.user import UserSchema
 from redis_access import revoked_store, ACCESS_EXPIRES, REFRESH_EXPIRES
 
-_user_parser = reqparse.RequestParser()
-_user_parser.add_argument(
-    "username", type=str, required=True, help="This field cannot be left blank"
-)
-_user_parser.add_argument(
-    "password", type=str, required=True, help="This field cannot be left blank"
-)
+user_schema = UserSchema()
+user_list_schema = UserSchema(many=True)
 
 class User(Resource):
     @jwt_required
     def get(self, username):
         user = UserModel.findby_username(username)
         if user:
-            return user.json()
+            return user_schema.dump(user), 200
         return {'message': 'User not found', 'description': username}, 404
 
 class UserSearch(Resource):
     @jwt_required
     def get(self):
-        users = None
-        parser = reqparse.RequestParser()
-        parser.add_argument("username", type=str, required=True, help="This field cannot be left blank", location="args")
-
-        data = parser.parse_args()
-        if data['username']: users = UserModel.searchby_username(data['username'])
+        username = request.args.get('username')
+        if not username:
+            return {'message': 'username parameter missing', 'description': 'no username field'}, 400
+        users = UserModel.searchby_username(username)
 
         if users:
-            return {'items': len(users), 'users': [user.json() for user in users]}
-        return {'message': 'Search did not find any user', 'description': {'search_key': 'username', 'search_value': data['username']}}, 404
+            return {'items': len(users), 'users': user_list_schema.dump(users)}
+        return {'message': 'Search did not find any user', 'description': {'search_key': 'username', 'search_value': username}}, 404
 
 
 class UserList(Resource):
     @jwt_required
     def get(self):
         users = UserModel.find_all()
-        return {'items': len(users), 'users': [user.json() for user in users]}
+        return {'items': len(users), 'users': user_list_schema.dump(users)}
 
 class UserLogin(Resource):
     @classmethod
     def post(cls):
-        data = _user_parser.parse_args()
+        
+        user_data = user_schema.load(request.get_json())
 
-        user = UserModel.findby_username(data['username'])
-        if user and user.check_pwd(data['password']):
+        user = UserModel.findby_username(user_data.username)
+        if user and user.check_pwd(user_data.password):
             access_token = create_access_token(identity=user.id, fresh=True)
             refresh_token = create_refresh_token(user.id)
 
@@ -65,7 +61,7 @@ class UserLogin(Resource):
 
             return {"access_token": access_token, "refresh_token": refresh_token}, 200
         
-        return {"message": "Invalid credentials", 'description': data['username']}, 401
+        return {"message": "Invalid credentials", 'description': user_data.username}, 401
 
 class UserLogout(Resource):
     @jwt_required
